@@ -30,6 +30,8 @@ io.on('connection', (socket) => {
   })
 
   socket.on('typing', (data) => {
-    socket.broadcast.emit('typing', {username : socket.username})
+    socket.broadcast.emit('typing', {
+      username : socket.username
+    })
   })
 })
