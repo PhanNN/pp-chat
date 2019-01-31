@@ -1,0 +1,32 @@
+{
+  "name": "pp-chat",
+  "version": "1.0.0",
+  "description": "pp-chat - chat system using Socket.io and \u001bzExpress",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PhanNN/pp-chat.git"
+  },
+  "keywords": [
+    "chat",
+    "socket",
+    "express",
+    "pp"
+  ],
+  "author": "PhanNN",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PhanNN/pp-chat/issues"
+  },
+  "homepage": "https://github.com/PhanNN/pp-chat#readme",
+  "dependencies": {
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.9",
+    "socket.io": "^2.2.0"
+  }
+}
