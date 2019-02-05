@@ -10,7 +10,7 @@ $(function() {
   const send_username = $('#send_username')
   const chatroom = $('#chatroom')
   const feedback = $('#feedback')
-  const contact = $('#contact')
+  const contact = $('#contacts')
 
   var chatWithData = ''
   let originUsername = ''
@@ -27,7 +27,10 @@ $(function() {
         let contacts = res.data.docs
         contacts.splice(contacts.indexOf(originUsername), 1);
         res.data.docs.forEach(function(item) {
-          contact.append(`<p class='contact message'> ${item} </p>`)
+          contact.append(`<div class='contact'>
+            <a class='name' href='#'>${item}</a>
+            <span class='count'></span>
+          </div>`)
         })
 
       },
@@ -45,14 +48,17 @@ $(function() {
   })
 
   message.bind('keypress', () => {
-    console.log(chatWithData)
     socket.emit('typing', {
       to: chatWithData
     })
   })
 
   socket.on('new_message', (data) => {
-    message.val('');
+    const receiver = data.username
+    if (originUsername !== receiver && chatWithData !== receiver) {
+      notiOther(contact, receiver)
+    }
+    message.val('')
     feedback.html('')
     chatroom.append(`<p class='message'> ${data.username}: ${data.message} </p>`)
   })
@@ -61,12 +67,28 @@ $(function() {
     feedback.html(`<p><i>${data.username} is typing ...</i></p>`)
   })
 
-  $(document).on("click", ".contact", function(event) {
-    const target = event.currentTarget.innerText
+  $(document).on("click", ".name", function(event) {
+    const curTarget = event.currentTarget
+    const target = curTarget.innerText
+    const countElm = curTarget.nextElementSibling
+    countElm.innerText = ''
+    chatroom.html('')
     loadConversation(chatroom, originUsername, target)
     chatWithData = target
   })
 })
+
+function notiOther(contact, item) {
+  const noti = contact.children('.contact').filter(function(index, it) {
+    return it.firstElementChild.text === item
+  })[0].lastElementChild
+  let count = parseInt(noti.innerText)
+  if (count) {
+    noti.innerText = ++count
+  } else {
+    noti.innerText = 1
+  }
+}
 
 function loadConversation(chatroom, source, target) {
   $.ajax({
@@ -76,6 +98,9 @@ function loadConversation(chatroom, source, target) {
       res.data.messages.forEach(function(data) {
         chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
       })
+      chatroom.animate({
+        scrollTop: chatroom.get(0).scrollHeight
+      }, 1000)
     },
     error: function(err) {
       console.log(err)
