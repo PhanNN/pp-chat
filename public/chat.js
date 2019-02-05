@@ -1,20 +1,35 @@
+const serverUrl = 'http://localhost:3000'
+
 $(function() {
-  const socket = io.connect('http://localhost:3000')
+  const socket = io.connect(serverUrl)
 
   const message = $('#message')
   const username = $('#username')
-  const chatWith = $('#chat_with')
   const send_message = $('#send_message')
   const send_chatWith = $('#send_chat_with')
   const send_username = $('#send_username')
   const chatroom = $('#chatroom')
   const feedback = $('#feedback')
+  const contact = $('#contact')
 
   var chatWithData = ''
 
   send_username.click(function() {
     socket.emit('change_username', {
       username: username.val()
+    })
+    $.ajax({
+      url: serverUrl + '/contacts',
+      type: 'GET',
+      success: function(res) {
+        res.data.docs.forEach(function(item) {
+          contact.append(`<p class='contact message'> ${item} </p>`)
+        })
+
+      },
+      error: function(err) {
+        console.log(err)
+      }
     })
   })
 
@@ -23,10 +38,6 @@ $(function() {
       message: message.val(),
       to: chatWithData
     })
-  })
-
-  send_chatWith.click(function() {
-    chatWithData = chatWith.val()
   })
 
   message.bind('keypress', () => {
@@ -44,4 +55,25 @@ $(function() {
   socket.on('typing', (data) => {
     feedback.html(`<p><i>${data.username} is typing ...</i></p>`)
   })
+
+  $(document).on("click", ".contact", function(event) {
+    const target = event.currentTarget.innerText
+    loadConversation(chatroom, username.val(), target)
+    chatWithData = target
+  })
 })
+
+function loadConversation(chatroom, source, target) {
+  $.ajax({
+    url: serverUrl + `/conversation?user=${source}&target=${target}`,
+    type: 'GET',
+    success: function(res) {
+      res.data.messages.forEach(function(data) {
+        chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
+      })
+    },
+    error: function(err) {
+      console.log(err)
+    }
+  })
+}

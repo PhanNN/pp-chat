@@ -27,3 +27,35 @@ exports.saveMsg = (from, to, msg) => {
     })
   })
 }
+
+exports.fetchConversations = (req, res, user) => {
+  Conversation.paginate({
+    owner: {
+      $eq: user
+    }
+  }, { 
+    offset: 0,
+    limit: 100,
+    populate: [{
+      path: 'messages'
+    }]
+  })
+  .then(function(result) {
+    res.json({success: true, data: result});
+  })
+}
+
+exports.fetchConversation = (req, res, user, target) => {
+  Conversation.findOne({
+    owner: {
+      $eq: user
+    },
+    to: {
+      $eq: target
+    }
+  })
+  .populate('messages')
+  .then(function(result) {
+    res.json({success: true, data: result});
+  })
+}
