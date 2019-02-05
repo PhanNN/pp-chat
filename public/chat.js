@@ -16,7 +16,7 @@ $(function() {
   let originUsername = ''
 
   send_username.click(function() {
-    originUsername = username.val()
+    originUsername = username.val().trim()
     socket.emit('change_username', {
       username: originUsername
     })
@@ -45,6 +45,7 @@ $(function() {
   })
 
   message.bind('keypress', () => {
+    console.log(chatWithData)
     socket.emit('typing', {
       to: chatWithData
     })
