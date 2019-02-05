@@ -13,15 +13,19 @@ $(function() {
   const contact = $('#contact')
 
   var chatWithData = ''
+  let originUsername = ''
 
   send_username.click(function() {
+    originUsername = username.val()
     socket.emit('change_username', {
-      username: username.val()
+      username: originUsername
     })
     $.ajax({
       url: serverUrl + '/contacts',
       type: 'GET',
       success: function(res) {
+        let contacts = res.data.docs
+        contacts.splice(contacts.indexOf(originUsername), 1);
         res.data.docs.forEach(function(item) {
           contact.append(`<p class='contact message'> ${item} </p>`)
         })
@@ -58,7 +62,7 @@ $(function() {
 
   $(document).on("click", ".contact", function(event) {
     const target = event.currentTarget.innerText
-    loadConversation(chatroom, username.val(), target)
+    loadConversation(chatroom, originUsername, target)
     chatWithData = target
   })
 })
