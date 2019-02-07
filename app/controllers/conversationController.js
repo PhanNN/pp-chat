@@ -1,13 +1,15 @@
 const {Conversation, Msg} = require("../models/conversation")
 
-exports.saveMsg = (from, to, msg) => {
+exports.saveMsg = (from, to, msg, attachment) => {
   Conversation.findOrCreate({
     owner: from,
     to: to
   }, (err, item, created) => {
     Msg.create({
+      type: attachment !== null ? 'attachment' : 'message',
       text: msg,
       from: from,
+      attachment: attachment,
       createdAt: Date()
     }, function(err, val) {
       if (err) {

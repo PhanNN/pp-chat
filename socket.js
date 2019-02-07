@@ -12,15 +12,9 @@ exports.io = (server) => {
     })
 
     socket.on('new_message', async (data) => {
-      await conversationCtrl.saveMsg(socket.username, data.to, data.message)
-      io.to(data.to).emit('new_message', {
-        message: data.message,
-        username: socket.username
-      })
-      io.to(socket.username).emit('new_message', {
-        message: data.message,
-        username: socket.username
-      })
+      await conversationCtrl.saveMsg(socket.username, data.to, data.message, data.attachment)
+      sendMsg(io, socket.username, data.to, data)
+      sendMsg(io, socket.username, socket.username, data)
     })
 
     socket.on('typing', (data) => {
@@ -28,5 +22,14 @@ exports.io = (server) => {
         username: socket.username
       })
     })
+  })
+}
+
+function sendMsg(io, from, to, data) {
+  io.to(to).emit('new_message', {
+    type: data.attachment ? 'attachment' : 'message',
+    path: data.attachment.path,
+    message: data.message,
+    username: from
   })
 }

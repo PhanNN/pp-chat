@@ -4,9 +4,15 @@ const findOrCreate = require('mongoose-findorcreate')
 
 // Msg
 const messageSchema = mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['message', 'attachment'],
+    default : 'message'
+  },
   text: String,
   createdAt: Date,
-  from: String
+  from: String,
+  attachment: { type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }
 })
 
 messageSchema.plugin(mongoosePaginate);

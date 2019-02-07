@@ -11,6 +11,7 @@ $(function() {
   const chatroom = $('#chatroom')
   const feedback = $('#feedback')
   const contact = $('#contacts')
+  const myfile = $('#myfile')
 
   var chatWithData = ''
   let originUsername = ''
@@ -52,6 +53,8 @@ $(function() {
       to: chatWithData
     })
   })
+
+  myfile.change((e) => uploadFile(e, socket, chatWithData))
 
   socket.on('new_message', (data) => {
     const receiver = data.username
@@ -101,6 +104,34 @@ function loadConversation(chatroom, source, target) {
       chatroom.animate({
         scrollTop: chatroom.get(0).scrollHeight
       }, 1000)
+    },
+    error: function(err) {
+      console.log(err)
+    }
+  })
+}
+
+function uploadFile(e, socket, to) {
+  let file = e.target.files[0];
+  if (!file) {
+    return;
+  }
+  let data = new FormData()
+  data.append('files', file)
+  $.ajax({
+    url: serverUrl + `/upload`,
+    type: 'POST',
+    data: data,
+    contentType: false,
+    cache: false,
+    processData: false,
+    success: function(res) {
+      const resData = res.data
+      socket.emit('new_message', {
+        message: resData.name,
+        to: to,
+        attachment: resData
+      })
     },
     error: function(err) {
       console.log(err)
