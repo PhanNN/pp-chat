@@ -60,6 +60,7 @@ $(function() {
     const receiver = data.username
     if (originUsername !== receiver && chatWithData !== receiver) {
       notiOther(contact, receiver)
+      return
     }
     message.val('')
     feedback.html('')
@@ -68,6 +69,7 @@ $(function() {
     } else {
       chatroom.append(`<p class='message'> ${data.username}: ${data.message} </p>`)
     }
+    moveToBottom(chatroom)
   })
 
   socket.on('typing', (data) => {
@@ -109,14 +111,18 @@ function loadConversation(chatroom, source, target) {
           chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
         }
       })
-      chatroom.animate({
-        scrollTop: chatroom.get(0).scrollHeight
-      }, 1000)
+      moveToBottom(chatroom)
     },
     error: function(err) {
       console.log(err)
     }
   })
+}
+
+function moveToBottom(chatroom) {
+  chatroom.animate({
+    scrollTop: chatroom.get(0).scrollHeight
+  }, 1000)
 }
 
 function uploadFile(e, socket, to) {
