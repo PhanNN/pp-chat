@@ -9,6 +9,7 @@ mongoose.connect(configDB.url)
 app.set('view engine', 'ejs')
 
 app.use(express.static('public'))
+app.use('/attachments', express.static('attachments'))
 
 app.get('/', (req, res) => {
   res.render('index')

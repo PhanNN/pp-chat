@@ -56,7 +56,12 @@ exports.fetchConversation = (req, res, user, target) => {
       $eq: target
     }
   })
-  .populate('messages')
+  .populate({
+    path: 'messages',
+    populate: {
+      path: 'attachment'
+    }
+  })
   .then(function(result) {
     res.json({success: true, data: result});
   })

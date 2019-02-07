@@ -63,7 +63,11 @@ $(function() {
     }
     message.val('')
     feedback.html('')
-    chatroom.append(`<p class='message'> ${data.username}: ${data.message} </p>`)
+    if ('attachment' === data.type) {
+      chatroom.append(`<p class='message'> ${data.username}: <a href="${data.path}" download="${data.message}">${data.message}</a></p>`)
+    } else {
+      chatroom.append(`<p class='message'> ${data.username}: ${data.message} </p>`)
+    }
   })
 
   socket.on('typing', (data) => {
@@ -99,7 +103,11 @@ function loadConversation(chatroom, source, target) {
     type: 'GET',
     success: function(res) {
       res.data.messages.forEach(function(data) {
-        chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
+        if ('attachment' === data.type) {
+          chatroom.append(`<p class='message'> ${data.from}: <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></p>`)
+        } else {
+          chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
+        }
       })
       chatroom.animate({
         scrollTop: chatroom.get(0).scrollHeight

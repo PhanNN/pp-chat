@@ -28,7 +28,7 @@ exports.io = (server) => {
 function sendMsg(io, from, to, data) {
   io.to(to).emit('new_message', {
     type: data.attachment ? 'attachment' : 'message',
-    path: data.attachment.path,
+    path: data.attachment ? data.attachment.path : '',
     message: data.message,
     username: from
   })
