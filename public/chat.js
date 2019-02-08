@@ -1,4 +1,4 @@
-const serverUrl = 'http://localhost:3000'
+const serverUrl = 'http://192.168.1.149:3000'
 
 $(function() {
   const socket = io.connect(serverUrl)
@@ -12,14 +12,31 @@ $(function() {
   const feedback = $('#feedback')
   const contact = $('#contacts')
   const myfile = $('#myfile')
+  const videoBox = $('.video-box')
+  const videoStream = $('#video-stream')[0]
 
-  var chatWithData = ''
+  let chatWithData = ''
   let originUsername = ''
+  let peer
+  let getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia).bind(navigator)
 
   send_username.click(function() {
     originUsername = username.val().trim()
+    peer = initPeer(originUsername)
     socket.emit('change_username', {
       username: originUsername
+    })
+    peer.on('call', function(call) {
+      getUserMedia({video: true, audio: true}, function(stream) {
+        call.answer(stream) // Answer the call with an A/V stream.
+        call.on('stream', function(remoteStream) {
+          videoBox.removeClass('hidden-box')
+          videoStream.srcObject = remoteStream
+          videoStream.play()
+        })
+      }, function(err) {
+        console.log('Failed to get local stream', err)
+      })
     })
     $.ajax({
       url: serverUrl + '/contacts',
@@ -84,6 +101,22 @@ $(function() {
     chatroom.html('')
     loadConversation(chatroom, originUsername, target)
     chatWithData = target
+
+    // var conn = peer.connect(target)
+    // conn.on('open', function(){
+    //   conn.send('hi!');
+    // })
+
+    getUserMedia({video: true, audio: true}, function(stream) {
+      let call = peer.call(target, stream)
+      call.on('stream', function(remoteStream) {
+        videoBox.removeClass('hidden-box')
+        videoStream.srcObject = remoteStream
+        videoStream.play()
+      })
+    }, function(err) {
+      console.log('Failed to get local stream', err)
+    })
   })
 })
 
@@ -151,4 +184,15 @@ function uploadFile(e, socket, to) {
       console.log(err)
     }
   })
+}
+
+function initPeer(user) {
+  let peer = new Peer(user)
+
+  peer.on('connection', function(conn) {
+    conn.on('data', function(data){
+      console.log(data);
+    })
+  })
+  return peer
 }

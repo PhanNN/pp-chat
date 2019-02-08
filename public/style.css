@@ -149,6 +149,21 @@ p.message, .contact {
   opacity: 0;
 }
 
+#emojiPickerWrap {
+  margin:10px 0 0 0;
+  }
+.field { 
+  padding: 20px 0; 
+}
+textarea { 
+  width: 400px; 
+  height: 200px; 
+}
+
+.hidden-box {
+  display: none;
+}
+
 /*#contact {
 	flex: 0 0 25%;
 	max-width: 420px;
