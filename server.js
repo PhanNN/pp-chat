@@ -21,6 +21,16 @@ io(server)
 
 const routes = require('./routes')
 app.use('/', routes)
-app.use('/peer', ExpressPeerServer(server, {
+
+const peerserver = ExpressPeerServer(server, {
   debug: true
-}))
+})
+app.use('/peer', peerserver)
+
+peerserver.on('connection', function(id) {
+  console.log(`Connect ${id}`)
+})
+
+peerserver.on('disconnect', function(id) {
+  console.log(`Disconnect ${id}`)
+})

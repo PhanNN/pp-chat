@@ -102,10 +102,7 @@ $(function() {
     loadConversation(chatroom, originUsername, target)
     chatWithData = target
 
-    // var conn = peer.connect(target)
-    // conn.on('open', function(){
-    //   conn.send('hi!');
-    // })
+    let conn = peer.connect(target)
 
     getUserMedia({video: true, audio: true}, function(stream) {
       let call = peer.call(target, stream)
@@ -187,7 +184,11 @@ function uploadFile(e, socket, to) {
 }
 
 function initPeer(user) {
-  let peer = new Peer(user)
+  let peer = new Peer(user, {
+    host: '192.168.1.149',
+    port: '3000',
+    path: 'peer'
+  })
 
   peer.on('connection', function(conn) {
     conn.on('data', function(data){
