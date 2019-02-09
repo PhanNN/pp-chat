@@ -6,7 +6,7 @@ exports.saveMsg = (from, to, msg, attachment) => {
     to: to
   }, (err, item, created) => {
     Msg.create({
-      type: attachment !== null ? 'attachment' : 'message',
+      type: typeof attachment !== 'undefined' ? 'attachment' : 'message',
       text: msg,
       from: from,
       attachment: attachment,

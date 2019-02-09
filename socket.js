@@ -1,4 +1,5 @@
 const conversationCtrl = require('./app/controllers/conversationController')
+const {getHash} = require('./app/controllers/commonController')
 
 exports.io = (server) => {
   const io = require('socket.io')(server)
@@ -8,7 +9,7 @@ exports.io = (server) => {
 
     socket.on('change_username', (data) => {
       socket.username = data.username
-      socket.join(socket.username);
+      socket.join(getHash(socket.username))
     })
 
     socket.on('new_message', async (data) => {
@@ -18,7 +19,7 @@ exports.io = (server) => {
     })
 
     socket.on('typing', (data) => {
-      io.to(data.to).emit('typing', {
+      io.to(getHash(data.to)).emit('typing', {
         username: socket.username
       })
     })
@@ -27,7 +28,7 @@ exports.io = (server) => {
 
 function sendMsg(io, from, to, data) {
   const isAttachmentMsg = data.attachment
-  io.to(to).emit('new_message', {
+  io.to(getHash(to)).emit('new_message', {
     type: isAttachmentMsg ? 'attachment' : 'message',
     path: isAttachmentMsg ? data.attachment.path : '',
     message: data.message,

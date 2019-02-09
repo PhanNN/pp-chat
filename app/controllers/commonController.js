@@ -2,6 +2,7 @@ const path = require('path')
 const mkdirp = require('mkdirp')
 const multer = require('multer')
 const uuidv4 = require('uuid/v4')
+const crypto = require('crypto')
 const {Attachment} = require("../models/attachment")
 
 const ATTACHMENTS_ROOT = 'attachments'
@@ -46,4 +47,10 @@ exports.uploadFile = (req, res) => {
       })
     }
   })
+}
+
+exports.getHash = (text) => {
+  return crypto.createHmac('sha256', process.env.CRYPTO_SECRET)
+    .update(text)
+    .digest('hex')
 }

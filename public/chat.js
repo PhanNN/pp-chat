@@ -1,4 +1,4 @@
-const serverUrl = 'http://192.168.1.149:3000'
+const serverUrl = 'http://localhost:3000'
 
 $(function() {
   const socket = io.connect(serverUrl)
