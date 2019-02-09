@@ -47,6 +47,9 @@ $(function() {
         res.data.docs.forEach(function(item) {
           contact.append(`<div class='contact'>
             <a class='name' href='#'>${item}</a>
+            <span class='status'>
+              <i class="fas fa-circle"></i>
+            </span>
             <span class='count'></span>
           </div>`)
         })
@@ -93,10 +96,18 @@ $(function() {
     feedback.html(`<p><i>${data.username} is typing ...</i></p>`)
   })
 
+  socket.on('online', (data) => {
+    changeStatus(contact, data, true)
+  })
+
+  socket.on('offline', (data) => {
+    changeStatus(contact, data, false)
+  })
+
   $(document).on("click", ".name", function(event) {
     const curTarget = event.currentTarget
     const target = curTarget.innerText
-    const countElm = curTarget.nextElementSibling
+    const countElm = curTarget.nextElementSibling.nextElementSibling
     countElm.innerText = ''
     chatroom.html('')
     loadConversation(chatroom, originUsername, target)
@@ -104,16 +115,16 @@ $(function() {
 
     let conn = peer.connect(target)
 
-    getUserMedia({video: true, audio: true}, function(stream) {
-      let call = peer.call(target, stream)
-      call.on('stream', function(remoteStream) {
-        videoBox.removeClass('hidden-box')
-        videoStream.srcObject = remoteStream
-        videoStream.play()
-      })
-    }, function(err) {
-      console.log('Failed to get local stream', err)
-    })
+    // getUserMedia({video: true, audio: true}, function(stream) {
+    //   let call = peer.call(target, stream)
+    //   call.on('stream', function(remoteStream) {
+    //     videoBox.removeClass('hidden-box')
+    //     videoStream.srcObject = remoteStream
+    //     videoStream.play()
+    //   })
+    // }, function(err) {
+    //   console.log('Failed to get local stream', err)
+    // })
   })
 })
 
@@ -126,6 +137,17 @@ function notiOther(contact, item) {
     noti.innerText = ++count
   } else {
     noti.innerText = 1
+  }
+}
+
+function changeStatus(contact, item, active) {
+  const status = contact.children('.contact').filter(function(index, it) {
+    return it.firstElementChild.text === item
+  })[0].firstElementChild.nextElementSibling
+  if (active) {
+    status.classList.add('active')
+  } else {
+    status.classList.remove('active')
   }
 }
 

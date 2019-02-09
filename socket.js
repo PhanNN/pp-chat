@@ -10,6 +10,7 @@ exports.io = (server) => {
     socket.on('change_username', (data) => {
       socket.username = data.username
       socket.join(getHash(socket.username))
+      socket.broadcast.emit('online', socket.username);
     })
 
     socket.on('new_message', async (data) => {

@@ -164,6 +164,14 @@ textarea {
   display: none;
 }
 
+.status > i {
+  color: grey;
+}
+
+.status.active > i {
+  color: green;
+}
+
 /*#contact {
 	flex: 0 0 25%;
 	max-width: 420px;
