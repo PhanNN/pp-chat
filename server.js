@@ -18,6 +18,10 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
+app.get('/new', (req, res) => {
+  res.render('new')
+})
+
 server = app.listen(process.env.SERVER_PORT || 3000)
 io(server)
 
