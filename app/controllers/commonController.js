@@ -50,6 +50,7 @@ exports.uploadFile = (req, res) => {
 }
 
 exports.getHash = (text) => {
+  console.log(text)
   return crypto.createHmac('sha256', process.env.CRYPTO_SECRET)
     .update(text)
     .digest('hex')

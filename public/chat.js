@@ -1,4 +1,5 @@
 const serverUrl = 'http://localhost:3000'
+let socket, message, chatWithData;
 
 // $('.chat[data-chat=person2]').classList.add('active-chat')
 // $('.person[data-chat=person2]').classList.add('active')
@@ -33,9 +34,9 @@ const serverUrl = 'http://localhost:3000'
 // }
 
 $(function() {
-  const socket = io.connect(serverUrl)
+  socket = io.connect(serverUrl)
 
-  const message = $('#message')
+  message = $('#message')
   const username = $('#username')
   const send_message = $('#send_message')
   const send_chatWith = $('#send_chat_with')
@@ -45,9 +46,10 @@ $(function() {
   const contact = $('#contacts')
   const myfile = $('#myfile')
   const videoBox = $('.video-box')
+  const chatWith = $('#chat-with')
   const videoStream = $('#video-stream')[0]
 
-  let chatWithData = ''
+  chatWithData = ''
   let originUsername = ''
   let peer
   let getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia).bind(navigator)
@@ -58,32 +60,34 @@ $(function() {
     socket.emit('change_username', {
       username: originUsername
     })
-    peer.on('call', function(call) {
-      getUserMedia({video: true, audio: true}, function(stream) {
-        call.answer(stream) // Answer the call with an A/V stream.
-        call.on('stream', function(remoteStream) {
-          videoBox.removeClass('hidden-box')
-          videoStream.srcObject = remoteStream
-          videoStream.play()
-        })
-      }, function(err) {
-        console.log('Failed to get local stream', err)
-      })
-    })
+    // peer.on('call', function(call) {
+    //   getUserMedia({video: true, audio: true}, function(stream) {
+    //     call.answer(stream) // Answer the call with an A/V stream.
+    //     call.on('stream', function(remoteStream) {
+    //       videoBox.removeClass('hidden-box')
+    //       videoStream.srcObject = remoteStream
+    //       videoStream.play()
+    //     })
+    //   }, function(err) {
+    //     console.log('Failed to get local stream', err)
+    //   })
+    // })
     $.ajax({
       url: serverUrl + '/contacts',
       type: 'GET',
       success: function(res) {
         let contacts = res.data.docs
-        contacts.splice(contacts.indexOf(originUsername), 1);
+        contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
         res.data.docs.forEach(function(item) {
-          contact.append(`<div class='contact'>
-            <a class='name' href='#'>${item}</a>
-            <span class='status'>
-              <i class="fas fa-circle"></i>
-            </span>
-            <span class='count'></span>
-          </div>`)
+          contact.append(`<li class="person">
+              <img src="${item.avatar}" alt="" />
+              <span class="name">${item.name}</span>
+              <span class='status'>
+                <i class="fas fa-circle"></i>
+              </span>
+              <span class="time">2:09 PM</span>
+              <span class="preview">I was wondering...</span>
+          </li>`)
         })
 
       },
@@ -94,10 +98,7 @@ $(function() {
   })
 
   send_message.click(function() {
-    socket.emit('new_message', {
-      message: message.val(),
-      to: chatWithData
-    })
+    sendMsg(socket, chatWithData, message.val())
   })
 
   message.bind('keypress', () => {
@@ -114,12 +115,17 @@ $(function() {
       notiOther(contact, receiver)
       return
     }
+    const chatClass = originUsername === receiver ? 'me' : 'you'
     message.val('')
     feedback.html('')
     if ('attachment' === data.type) {
-      chatroom.append(`<p class='message'> ${data.username}: <a href="${data.path}" download="${data.message}">${data.message}</a></p>`)
+      chatroom.append(`<div class="bubble ${chatClass}">
+                          <a href="${data.path}" download="${data.message}">${data.message}</a>
+                      </div>`)
     } else {
-      chatroom.append(`<p class='message'> ${data.username}: ${data.message} </p>`)
+      chatroom.append(`<div class="bubble ${chatClass}">
+                          ${data.message}
+                      </div>`)
     }
     moveToBottom(chatroom)
   })
@@ -144,6 +150,7 @@ $(function() {
     chatroom.html('')
     loadConversation(chatroom, originUsername, target)
     chatWithData = target
+    chatWith.text(target)
 
     let conn = peer.connect(target)
 
@@ -160,6 +167,19 @@ $(function() {
   })
 })
 
+function sendMsg(socket, to, msg) {
+  if (msg) {
+    socket.emit('new_message', {
+      message: msg,
+      to: to
+    })
+  }
+}
+
+function handleSendMsg() {
+  sendMsg(socket, chatWithData, typeof message !== 'undefined' ? message.val() : null)
+}
+
 function notiOther(contact, item) {
   const noti = contact.children('.contact').filter(function(index, it) {
     return it.firstElementChild.text === item
@@ -173,14 +193,14 @@ function notiOther(contact, item) {
 }
 
 function changeStatus(contact, item, active) {
-  const status = contact.children('.contact').filter(function(index, it) {
-    return it.firstElementChild.text === item
-  })[0].firstElementChild.nextElementSibling
-  if (active) {
-    status.classList.add('active')
-  } else {
-    status.classList.remove('active')
-  }
+  // const status = contact.children('.contact').filter(function(index, it) {
+  //   return it.firstElementChild.text === item
+  // })[0].firstElementChild.nextElementSibling
+  // if (active) {
+  //   status.classList.add('active')
+  // } else {
+  //   status.classList.remove('active')
+  // }
 }
 
 function loadConversation(chatroom, source, target) {
@@ -189,10 +209,11 @@ function loadConversation(chatroom, source, target) {
     type: 'GET',
     success: function(res) {
       res.data.messages.forEach(function(data) {
+        const chatClass = source === data.from ? 'me' : 'you'
         if ('attachment' === data.type) {
-          chatroom.append(`<p class='message'> ${data.from}: <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></p>`)
+          // chatroom.append(`<p class='message'> ${data.from}: <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></p>`)
         } else {
-          chatroom.append(`<p class='message'> ${data.from}: ${data.text} </p>`)
+          chatroom.append(`<div class='bubble ${chatClass}'> ${data.text} </div>`)
         }
       })
       moveToBottom(chatroom)
@@ -239,7 +260,7 @@ function uploadFile(e, socket, to) {
 
 function initPeer(user) {
   let peer = new Peer(user, {
-    host: '192.168.1.149',
+    host: 'localhost',
     port: '3000',
     path: 'peer'
   })
