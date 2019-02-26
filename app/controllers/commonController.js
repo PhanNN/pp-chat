@@ -1,51 +1,60 @@
-const path = require('path')
-const mkdirp = require('mkdirp')
-const multer = require('multer')
+const fs = require('fs')
 const uuidv4 = require('uuid/v4')
 const crypto = require('crypto')
+const Storage = require('@google-cloud/storage');
 const {Attachment} = require("../models/attachment")
-
-const ATTACHMENTS_ROOT = 'attachments'
-
-const uploader = multer({
-  desc: ATTACHMENTS_ROOT,
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const date = new Date()
-      const dir = path.join(ATTACHMENTS_ROOT, `/${date.getFullYear()}/${date.getMonth() + 1}`)
-      file.storedPath = `${date.getFullYear()}/${date.getMonth() + 1}`
-      mkdirp(dir, (e) => {
-        if (e) return cb(null, ATTACHMENTS_ROOT)
-        cb(null, dir)
-      })
-    },
-    filename: (req, file, cb) => {
-      cb(null, `${uuidv4()}.${file.originalname.split('.').pop().toLowerCase()}`)
-    }
-  })
-})
+const bucketName = 'cnnbucket'
+const projectId = 'peva-212115'
 
 exports.uploadFile = (req, res) => {
-  uploader.array('files')(req, res, (e, data) => {
-    if (e) {
-      console.log(e)
-      res.json({success: false, data: err})
-    }
-    let file = req.files[0]
-    if (file) {
-      new Attachment({
-        name: file.originalname,
-        path: file.path,
-        encoding: file.encoding,
-        size: file.size,
-        mimeType: file.mimetype
-      }).save(function(err, item) {
-        if (err)
-        res.json({success: false, data: err})
+  const file = req.files[0]
+  switch(process.env.UPLOAD_MODE) {
+    case "LOCAL":
+      if (file) {
+        saveAttachment(file, res)
+      }
+    break
+    case "AWS":
+    break
+    case "GOOGLE":
+      const storage = new Storage({
+        projectId: projectId,
+        keyFilename: 'cloud_credential.json'
+      });
+      const bucket = storage.bucket(bucketName)
+      const gcsname = uuidv4() + file.originalname
+      const files = bucket.file(gcsname)
 
-        res.json({success: true, data: item})
-      })
-    }
+      fs.createReadStream(file.path)
+        .pipe(files.createWriteStream({
+          metadata: {
+            contentType: file.mimetype
+          }
+        }))
+        .on('error', (err) => {
+          res.json({success: false, data: err})
+        })
+        .on('finish', () => {
+          saveAttachment(file, res, `https://storage.googleapis.com/${bucketName}/${gcsname}`)
+        })
+    break
+    default:
+    break
+  }
+}
+
+function saveAttachment(file, res, path) {
+  new Attachment({
+    name: file.originalname,
+    path: path ? path : file.path,
+    encoding: file.encoding,
+    size: file.size,
+    mimeType: file.mimetype
+  }).save(function(err, item) {
+    if (err)
+    res.json({success: false, data: err})
+
+    res.json({success: true, data: item})
   })
 }
 
