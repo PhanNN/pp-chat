@@ -181,15 +181,15 @@ function handleSendMsg() {
 }
 
 function notiOther(contact, item) {
-  const noti = contact.children('.contact').filter(function(index, it) {
-    return it.firstElementChild.text === item
-  })[0].lastElementChild
-  let count = parseInt(noti.innerText)
-  if (count) {
-    noti.innerText = ++count
-  } else {
-    noti.innerText = 1
-  }
+  // const noti = contact.children('.contact').filter(function(index, it) {
+  //   return it.firstElementChild.text === item
+  // })[0].lastElementChild
+  // let count = parseInt(noti.innerText)
+  // if (count) {
+  //   noti.innerText = ++count
+  // } else {
+  //   noti.innerText = 1
+  // }
 }
 
 function changeStatus(contact, item, active) {
@@ -211,7 +211,7 @@ function loadConversation(chatroom, source, target) {
       res.data.messages.forEach(function(data) {
         const chatClass = source === data.from ? 'me' : 'you'
         if ('attachment' === data.type) {
-          // chatroom.append(`<p class='message'> ${data.from}: <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></p>`)
+          chatroom.append(`<div class='bubble ${chatClass}'> <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></div>`)
         } else {
           chatroom.append(`<div class='bubble ${chatClass}'> ${data.text} </div>`)
         }

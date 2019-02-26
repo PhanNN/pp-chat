@@ -111,7 +111,7 @@ p.message, .contact {
 }
 
 #chatroom {
-	height: 90%;
+	height: 80%;
 	float: right;
 	width: 100%;
 	overflow: auto;
@@ -380,7 +380,7 @@ body {
   position: relative;
   /*display: none;*/
   overflow: hidden;
-  padding: 0 35px 92px;
+  padding: 0 35px 0;
   border-width: 1px 1px 1px 0;
   border-style: solid;
   border-color: var(--light);
@@ -427,7 +427,7 @@ body {
 }
 .container .right .write {
   position: absolute;
-  bottom: 29px;
+  bottom: 15px;
   left: 30px;
   height: 42px;
   padding-left: 8px;
