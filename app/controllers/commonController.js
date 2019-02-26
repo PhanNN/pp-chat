@@ -1,10 +1,9 @@
 const fs = require('fs')
 const uuidv4 = require('uuid/v4')
 const crypto = require('crypto')
-const Storage = require('@google-cloud/storage');
+const GGStorage = require('@google-cloud/storage')
+const AWS = require('aws-sdk')
 const {Attachment} = require("../models/attachment")
-const bucketName = 'cnnbucket'
-const projectId = 'peva-212115'
 
 exports.uploadFile = (req, res) => {
   const file = req.files[0]
@@ -15,13 +14,35 @@ exports.uploadFile = (req, res) => {
       }
     break
     case "AWS":
+      let s3Bucket = new AWS.S3({
+        accessKeyId: process.env.IAM_USER_KEY,
+        secretAccessKey: process.env.IAM_USER_SECRET,
+        Bucket: process.env.BUCKET_NAME
+      })
+      s3Bucket.createBucket(() => {
+        fs.readFile(file.path, function (err, data) {
+          const params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: uuidv4() + file.originalname,
+            Body: data,
+          }
+          s3Bucket.upload(params, (err, data) => {
+            if (err) {
+              console.log(err)
+              res.json({success: false, data: err})
+            } else {
+              saveAttachment(file, res, data.Location)
+            }
+          })
+        })
+     })
     break
     case "GOOGLE":
-      const storage = new Storage({
-        projectId: projectId,
+      const storage = new GGStorage({
+        projectId: process.env.GOOGLE_PROJECT_ID,
         keyFilename: 'cloud_credential.json'
       });
-      const bucket = storage.bucket(bucketName)
+      const bucket = storage.bucket(process.env.GOOGLE_BUCKET)
       const gcsname = uuidv4() + file.originalname
       const files = bucket.file(gcsname)
 
@@ -35,7 +56,7 @@ exports.uploadFile = (req, res) => {
           res.json({success: false, data: err})
         })
         .on('finish', () => {
-          saveAttachment(file, res, `https://storage.googleapis.com/${bucketName}/${gcsname}`)
+          saveAttachment(file, res, `https://storage.googleapis.com/${process.env.GOOGLE_BUCKET}/${gcsname}`)
         })
     break
     default:
