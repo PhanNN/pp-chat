@@ -38,7 +38,7 @@ router.get('/conversations', function(req, res, next) {
 
 router.get('/conversation', function(req, res, next) {
   const params = req.query
-  fetchConversation(req, res, params.user, params.target)
+  fetchConversation(req, res, params.user, params.target, params.page)
 })
 
 router.get('/contacts', function(req, res, next) {

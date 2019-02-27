@@ -47,7 +47,7 @@ exports.fetchConversations = (req, res, user) => {
   })
 }
 
-exports.fetchConversation = (req, res, user, target) => {
+exports.fetchConversation = (req, res, user, target, page) => {
   Conversation.findOne({
     owner: {
       $eq: user
@@ -58,11 +58,19 @@ exports.fetchConversation = (req, res, user, target) => {
   })
   .populate({
     path: 'messages',
+    options: {
+      sort: { createdAt: -1 },
+      skip: process.env.PER_PAGE * page,
+      limit : process.env.PER_PAGE
+    },
     populate: {
       path: 'attachment'
     }
   })
   .then(function(result) {
-    res.json({success: true, data: result});
+    if (result) {
+      result.messages = result.messages.reverse()
+    }
+    res.json({success: true, data: result})
   })
 }
