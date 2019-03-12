@@ -186,7 +186,7 @@ const chatUICss = `
     border-radius: 3px;
     background: rgba(25, 147, 147, 0.2);
     min-height: 100%;
-    width: 100%;
+    width: 70%;
     margin-right: 5px;
     color: #0ec879;
     overflow-y: auto;
@@ -251,28 +251,57 @@ const chatUICss = `
       margin-right: 0;
     }
   }
+  .write-link.smiley:before {
+    display: inline-block;
+    float: left;
+    width: 20px;
+    height: 20px;
+    content: "";
+    background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/382994/smiley.png");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .write-link.attach:before {
+    display: inline-block;
+    float: left;
+    width: 20px;
+    height: 20px;
+    content: "";
+    background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/382994/attachment.png);
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .write-link.file {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+  }
 </style>
 `;
 
 const chatUI = `<div class="floating-chat">
     <i class="fa fa-comments" aria-hidden="true"></i>
     <div class="chat">
-        <div class="header">
-            <span class="title">
-                what's on your mind?
-            </span>
-            <button>
-                <i class="fa fa-times" aria-hidden="true"></i>
-            </button>
-                         
-        </div>
-        <ul class="messages">
-        </ul>
-        <div class="footer">
-            <div class="text-box" contenteditable="true" disabled="true"></div>
-            <button id="sendMessage">send</button>
-        </div>
-    </div>
+      <div class="header">
+        <span class="title">
+          what's on your mind?
+        </span>
+        <button>
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>            
+      </div>
+      <ul class="messages">
+      </ul>
+      <div class="footer">
+        <a href="javascript:;" class="write-link attach"></a>
+        <input class="write-link file" type="file" name="attachFile" id="attach-file" />
+        <div class="text-box" contenteditable="true" disabled="true"></div>
+        <a href="javascript:;" class="write-link smiley"></a>
+        <button id="sendMessage">send</button>
+      </div>
+  </div>
 </div>`;
 
 const serverUrl = 'http://localhost:3000'
@@ -392,6 +421,35 @@ function loadUI() {
   head.innerHTML += chatUICss;
 }
 
+function uploadFile(e, socket, to) {
+  let file = e.target.files[0];
+  if (!file) {
+    return;
+  }
+  let data = new FormData()
+  data.append('files', file)
+  $.ajax({
+    url: serverUrl + `/upload`,
+    type: 'POST',
+    data: data,
+    contentType: false,
+    cache: false,
+    processData: false,
+    success: function(res) {
+      const resData = res.data
+      socket.emit('new_message', {
+        message: resData.name,
+        to: to,
+        attachment: resData
+      })
+    },
+    error: function(err) {
+      console.log(err)
+    }
+  })
+}
+
+
 window.onload = function() {
   socket = io.connect(serverUrl);
 
@@ -410,7 +468,8 @@ window.onload = function() {
     const chatClass = originUsername === receiver ? 'self' : 'other'
     // feedback.html('')
     if ('attachment' === data.type) {
-      chatroom.append(`<li class="${chatClass}"> <a href="${data.attachment.path}" download="${data.message}">${data.message}</a></li>`)
+      console.log(data)
+      chatroom.append(`<li class="${chatClass}"> <a href="${data.path}" download="${data.message}">${data.message}</a></li>`)
     } else {
       chatroom.append(`<li class="${chatClass}">${data.message}</li>`)
     }
@@ -432,4 +491,5 @@ window.onload = function() {
 
 
   element.click(openElement);
+  $('#attach-file').change((e) => uploadFile(e, socket, chatWithData))
 };
