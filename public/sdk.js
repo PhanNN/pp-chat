@@ -418,6 +418,7 @@ window.onload = function() {
   })
 
   loadUI();
+  loadConversation($('.messages'), originUsername, chatWithData);
   element = $('.floating-chat');
   var myStorage = localStorage;
 
@@ -428,6 +429,7 @@ window.onload = function() {
   setTimeout(function() {
       $('.floating-chat').addClass('enter');
   }, 1000);
+
 
   element.click(openElement);
 };
