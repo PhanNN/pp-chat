@@ -42,7 +42,7 @@ const chatUICss = `
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.14);
   }
   .floating-chat.expand {
-    width: 250px;
+    width: 450px;
     max-height: 400px;
     height: 400px;
     border-radius: 5px;
@@ -61,26 +61,39 @@ const chatUICss = `
     border-radius: 3px;
     cursor: pointer;
   }
+  .floating-chat .contacts {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    height: 100%;
+    transition: all 250ms ease-out;
+    margin: auto;
+    top: 5px;
+    left: 0;
+    width: 35%;
+    margin-left: 10px;
+  }
+  .floating-chat .full-ui {
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .floating-chat .full-ui.enter {
+    opacity: 1;
+  }
   .floating-chat .chat {
     display: flex;
     flex-direction: column;
     position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
     border-radius: 50%;
     transition: all 250ms ease-out;
     margin: auto;
     top: 0;
-    left: 0;
     right: 0;
     bottom: 0;
-  }
-  .floating-chat .chat.enter {
-    opacity: 1;
     border-radius: 0;
     margin: 10px;
-    width: auto;
+    width: 60%;
     height: auto;
   }
   .floating-chat .chat .header {
@@ -106,6 +119,17 @@ const chatUICss = `
     flex-grow: 1;
     border-radius: 4px;
     background: transparent;
+  }
+  .floating-chat .contacts ul::-webkit-scrollbar {
+    width: 5px;
+  }
+  .floating-chat .contacts ul::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: rgba(25, 147, 147, 0.1);
+  }
+  .floating-chat .contacts ul::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: rgba(25, 147, 147, 0.2);
   }
   .floating-chat .chat .messages::-webkit-scrollbar {
     width: 5px;
@@ -283,11 +307,34 @@ const chatUICss = `
     width: 20px;
     height: 20px;
   }
+
+  .floating-chat .contact {
+    padding-bottom: 10px;
+  }
+
+  .floating-chat .contact img {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+  }
+
+  .floating-chat .contacts ul {
+    height: 96%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border-right: 1px #ffffff solid;
+  }
 </style>
 `;
 
-const chatUI = `<div class="floating-chat">
-    <i class="fa fa-comments" aria-hidden="true"></i>
+const chatUI = `
+<div class="floating-chat">
+  <i class="fa fa-comments" aria-hidden="true"></i>
+  <div class="full-ui">
+    <div class="contacts">
+      <ul>
+      </ul>
+    </div>
     <div class="chat">
       <div class="header">
         <span class="title">
@@ -306,6 +353,7 @@ const chatUI = `<div class="floating-chat">
         <a href="javascript:;" class="write-link smiley"></a>
         <button id="sendMessage">send</button>
       </div>
+    </div>
   </div>
 </div>`;
 
@@ -321,7 +369,7 @@ function openElement() {
     var textInput = element.find('.text-box');
     element.find('>i').hide();
     element.addClass('expand');
-    element.find('.chat').addClass('enter');
+    element.find('.full-ui').addClass('enter');
     var strLength = textInput.val().length * 2;
     textInput.keydown(onMetaAndEnter).prop("disabled", false).focus();
     element.off('click', openElement);
@@ -331,14 +379,14 @@ function openElement() {
 }
 
 function closeElement() {
-    element.find('.chat').removeClass('enter').hide();
+    element.find('.full-ui').removeClass('enter').hide();
     element.find('>i').show();
     element.removeClass('expand');
     element.find('.header button').off('click', closeElement);
     element.find('#sendMessage').off('click', sendNewMessage);
     element.find('.text-box').off('keydown', onMetaAndEnter).prop("disabled", true).blur();
     setTimeout(function() {
-        element.find('.chat').removeClass('enter').show()
+        element.find('.full-ui').removeClass('enter').show()
         element.click(openElement);
     }, 500);
 }
@@ -385,6 +433,32 @@ function moveToBottom() {
   }, 250);
 }
 
+function loadContacts(contactDiv, source) {
+  $.ajax({
+    url: serverUrl + '/contacts',
+    type: 'GET',
+    success: function(res) {
+      let contacts = res.data.docs
+      contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
+      res.data.docs.forEach(function(item) {
+        contactDiv.append(`<li class="contact">
+            <img src="${item.avatar}" alt="" />
+            <span class="name">${item.name}</span>
+            <!-- span class='status'>
+              <i class="fas fa-circle"></i>
+            </span>
+            <span class="time">2:09 PM</span>
+            <span class="preview">I was wondering...</span -->
+        </li>`)
+      })
+
+    },
+    error: function(err) {
+      console.log(err)
+    }
+  })
+}
+
 function loadConversation(chatroom, source, target) {
   $.ajax({
     url: serverUrl + `/conversation?user=${source}&target=${target}`,
@@ -393,7 +467,7 @@ function loadConversation(chatroom, source, target) {
       res.data.messages.forEach(function(data) {
         const chatClass = source === data.from ? 'self' : 'other'
         if ('attachment' === data.type) {
-          chatroom.append(`<li class="${chatClass}"> <a href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
+          chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
         } else {
           chatroom.append(`<li class="${chatClass}">${data.text}</li>`)
         }
@@ -462,7 +536,6 @@ function init() {
   })
 
   socket.on('new_message', (data) => {
-    console.log(data)
     const chatroom = $('.messages')
     const receiver = data.username
     if (originUsername !== receiver && chatWithData !== receiver) {
@@ -472,8 +545,7 @@ function init() {
     const chatClass = originUsername === receiver ? 'self' : 'other'
     // feedback.html('')
     if ('attachment' === data.type) {
-      console.log(data)
-      chatroom.append(`<li class="${chatClass}"> <a href="${data.path}" download="${data.message}">${data.message}</a></li>`)
+      chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.path}" download="${data.message}">${data.message}</a></li>`)
     } else {
       chatroom.append(`<li class="${chatClass}">${data.message}</li>`)
     }
@@ -481,6 +553,7 @@ function init() {
   })
 
   loadUI();
+  loadContacts($('.contacts > ul'), originUsername);
   loadConversation($('.messages'), originUsername, chatWithData);
   element = $('.floating-chat');
   var myStorage = localStorage;
