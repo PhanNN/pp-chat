@@ -9,14 +9,15 @@ const chatUICss = `
     font: 12px/16px 'Noto Sans', sans-serif;
   }
   .floating-chat {
+    z-index: 99999;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     position: fixed;
-    bottom: 10px;
-    right: 10px;
+    bottom: 40px;
+    right: 50px;
     width: 40px;
     height: 40px;
     transform: translateY(70px);
@@ -27,6 +28,9 @@ const chatUICss = `
     background: -webkit-linear-gradient(-45deg, #183850 0, #183850 25%, #192c46 50%, #22254c 75%, #22254c 100%);
     background-repeat: no-repeat;
     background-attachment: fixed;
+  }
+  .floating-chat i {
+    color: #ffffff;
   }
   .floating-chat.enter:hover {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
@@ -272,6 +276,7 @@ const chatUICss = `
     background-position: center;
   }
   .write-link.file {
+    opacity: 0;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -449,8 +454,7 @@ function uploadFile(e, socket, to) {
   })
 }
 
-
-window.onload = function() {
+function init() {
   socket = io.connect(serverUrl);
 
   socket.emit('change_username', {
@@ -492,4 +496,16 @@ window.onload = function() {
 
   element.click(openElement);
   $('#attach-file').change((e) => uploadFile(e, socket, chatWithData))
+}
+
+
+window.onload = function() {
+  var head = document.getElementsByTagName('head')[0];
+  var script = document.createElement('script');
+  script.onload = function () {
+    init();
+  };
+  script.type = 'text/javascript';
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js';
+  head.appendChild(script);
 };
