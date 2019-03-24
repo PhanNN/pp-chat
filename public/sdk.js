@@ -324,6 +324,32 @@ const chatUICss = `
     overflow-x: hidden;
     border-right: 1px #ffffff solid;
   }
+
+  .contact .name {
+    color: #ffffff;
+    font-size: 0.85rem;
+  }
+
+  .new-msg a span {
+    font-weight: 900;
+  }
+
+  .msg-count {
+    display: none;
+  }
+
+  .new-msg .msg-count {
+    font-size: 0.6rem;
+    margin-top: 4px;
+    border-radius: 50%;
+    text-align: center;
+    background-color: white;
+    height: 15px;
+    width: 15px;
+    color: #DA003A;
+    display: inline-block;
+    float: right;
+  }
 </style>
 `;
 
@@ -357,13 +383,14 @@ const chatUI = `
   </div>
 </div>`;
 
-const serverUrl = 'http://localhost:3000'
+const serverUrl = 'http://172.16.0.7:3000'
 let socket, 
   message, 
   chatWithData, 
   element,
   originUsername = 'Demo',
-  allContacts;
+  allContacts,
+  newMsgCount = [];
 
 function openElement() {
     var messages = element.find('.messages');
@@ -413,6 +440,7 @@ function sendNewMessage() {
 
     if (!newMessage) return;
 
+    moveToFirst(chatWithData, '')
     sendMsg(socket, chatWithData, newMessage);
 
     // clean out old message
@@ -434,6 +462,22 @@ function moveToBottom() {
   }, 250);
 }
 
+function getContactLI(name, avatar, additionalCls, msgCount) {
+  return `
+  <li class="contact contact-${name} ${additionalCls}">
+    <a onclick="return changePartner('${name}');" href="javascript:;" class="contact-name">
+      <img src="${avatar}" alt="" />
+      <span class="name">${name}</span>
+      <!-- span class='status'>
+        <i class="fas fa-circle"></i>
+      </span>
+      <span class="time">2:09 PM</span -->
+      <span class="msg-count">${msgCount}</span>
+    </a>
+  </li>
+  `
+}
+
 function loadContacts(contactDiv, source) {
   $.ajax({
     url: serverUrl + '/contacts',
@@ -447,17 +491,10 @@ function loadContacts(contactDiv, source) {
         chatWithData = contacts[0].name
         if (chatWithData) {
           loadConversation($('.messages'), originUsername, chatWithData)
+          changeAvatar(chatWithData, allContacts[chatWithData])
         }
         res.data.docs.forEach(function(item) {
-          contactDiv.append(`<li class="contact">
-              <img src="${item.avatar}" alt="" />
-              <span class="name"><a onclick="return changePartner('${item.name}');" href="javascript:;" class="contact-name">${item.name}</a></span>
-              <!-- span class='status'>
-                <i class="fas fa-circle"></i>
-              </span>
-              <span class="time">2:09 PM</span>
-              <span class="preview">I was wondering...</span -->
-          </li>`)
+          contactDiv.append(getContactLI(item.name, item.avatar, '', 0))
         })
       }
     },
@@ -468,6 +505,7 @@ function loadContacts(contactDiv, source) {
 }
 
 function loadConversation(chatroom, source, target) {
+  chatWithData = target
   if (chatroom) {
     chatroom.empty()
   } else {
@@ -544,8 +582,15 @@ function uploadFile(e, socket, to) {
 }
 
 function changePartner(partner) {
-  loadConversation($('.messages'), originUsername, partner)
-  changeAvatar(partner, allContacts[partner])
+  if (chatWithData !== partner) {
+    // reset new-msg count
+    newMsgCount[partner] = 0
+
+    // remove new-msg class
+    $(`.contact-${partner}`).removeClass('new-msg')
+    loadConversation($('.messages'), originUsername, partner)
+    changeAvatar(partner, allContacts[partner])
+  }
 }
 
 function convertToMap(contacts) {
@@ -571,8 +616,14 @@ function changeAvatar(target, img) {
   }
 }
 
-function init() {
-  socket = io.connect(serverUrl);
+function moveToFirst(receiver, hasNewMsg) {
+  $(`.contacts > ul .contact-${receiver}`).remove()
+  $('.contacts > ul').prepend(getContactLI(receiver, allContacts[receiver], hasNewMsg ? 'new-msg' : '', newMsgCount[receiver]))
+}
+
+function initSocket() {
+  setSrc()
+  socket = io.connect(serverUrl)
 
   socket.emit('change_username', {
     username: originUsername
@@ -582,11 +633,16 @@ function init() {
     const chatroom = $('.messages')
     const receiver = data.username
     if (originUsername !== receiver && chatWithData !== receiver) {
-      // notiOther(contact, receiver)
+      if (typeof newMsgCount[receiver] == 'undefined') {
+        newMsgCount[receiver] = 1
+      } else {
+        newMsgCount[receiver]++
+      }
+      moveToFirst(receiver, 'new-msg')
       return
     }
-    const chatClass = originUsername === receiver ? 'self' : 'other'
     // feedback.html('')
+    const chatClass = originUsername === receiver ? `self from-${originUsername}` : `other from-${chatWithData}`
     if ('attachment' === data.type) {
       chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.path}" download="${data.message}">${data.message}</a></li>`)
     } else {
@@ -595,6 +651,29 @@ function init() {
     moveToBottom()
   })
 
+  socket.on('typing', (data) => {
+    console.log(data)
+    // feedback.html(`<p><i>${data.username} is typing ...</i></p>`)
+  })
+
+  socket.on('online', (data) => {
+    console.log(data)
+    // changeStatus(contact, data, true)
+  })
+
+  socket.on('offline', (data) => {
+    console.log(data)
+    // changeStatus(contact, data, false)
+  })
+}
+
+function setSrc() {
+  const url = new URL(document.URL)
+  originUsername = url.searchParams.get("src")
+}
+
+function init() {
+  initSocket()
   loadUI()
   loadContacts($('.contacts > ul'), originUsername)
   element = $('.floating-chat');
