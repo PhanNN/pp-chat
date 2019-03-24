@@ -18,7 +18,10 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
-server = app.listen(process.env.SERVER_PORT || 3000)
+const port = process.env.SERVER_PORT || 3000
+server = app.listen(port, () => {
+    console.log("App is running on port " + port)
+});
 io(server)
 
 const routes = require('./routes')
