@@ -360,9 +360,10 @@ const chatUI = `
 const serverUrl = 'http://localhost:3000'
 let socket, 
   message, 
-  chatWithData = 'Bingo', 
+  chatWithData, 
   element,
-  originUsername = 'Demo';
+  originUsername = 'Demo',
+  allContacts;
 
 function openElement() {
     var messages = element.find('.messages');
@@ -439,19 +440,26 @@ function loadContacts(contactDiv, source) {
     type: 'GET',
     success: function(res) {
       let contacts = res.data.docs
-      contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
-      res.data.docs.forEach(function(item) {
-        contactDiv.append(`<li class="contact">
-            <img src="${item.avatar}" alt="" />
-            <span class="name">${item.name}</span>
-            <!-- span class='status'>
-              <i class="fas fa-circle"></i>
-            </span>
-            <span class="time">2:09 PM</span>
-            <span class="preview">I was wondering...</span -->
-        </li>`)
-      })
-
+      if (contacts) {
+        allContacts = convertToMap(contacts)
+        changeAvatar(originUsername, allContacts[originUsername])
+        contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
+        chatWithData = contacts[0].name
+        if (chatWithData) {
+          loadConversation($('.messages'), originUsername, chatWithData)
+        }
+        res.data.docs.forEach(function(item) {
+          contactDiv.append(`<li class="contact">
+              <img src="${item.avatar}" alt="" />
+              <span class="name"><a onclick="return changePartner('${item.name}');" href="javascript:;" class="contact-name">${item.name}</a></span>
+              <!-- span class='status'>
+                <i class="fas fa-circle"></i>
+              </span>
+              <span class="time">2:09 PM</span>
+              <span class="preview">I was wondering...</span -->
+          </li>`)
+        })
+      }
     },
     error: function(err) {
       console.log(err)
@@ -460,19 +468,26 @@ function loadContacts(contactDiv, source) {
 }
 
 function loadConversation(chatroom, source, target) {
+  if (chatroom) {
+    chatroom.empty()
+  } else {
+    return
+  }
   $.ajax({
     url: serverUrl + `/conversation?user=${source}&target=${target}`,
     type: 'GET',
     success: function(res) {
-      res.data.messages.forEach(function(data) {
-        const chatClass = source === data.from ? 'self' : 'other'
-        if ('attachment' === data.type) {
-          chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
-        } else {
-          chatroom.append(`<li class="${chatClass}">${data.text}</li>`)
-        }
-      })
-      moveToBottom()
+      if (res.data) {
+        res.data.messages.forEach(function(data) {
+          const chatClass = source === data.from ? `self from-${source}` : `other from-${target}`
+          if ('attachment' === data.type) {
+            chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
+          } else {
+            chatroom.append(`<li class="${chatClass}">${data.text}</li>`)
+          }
+        })
+        moveToBottom()
+      }
     },
     error: function(err) {
       console.log(err)
@@ -528,6 +543,34 @@ function uploadFile(e, socket, to) {
   })
 }
 
+function changePartner(partner) {
+  loadConversation($('.messages'), originUsername, partner)
+  changeAvatar(partner, allContacts[partner])
+}
+
+function convertToMap(contacts) {
+  const arr = []
+  if (contacts) {
+    contacts.forEach(function(item) {
+      arr[item['name']] = item['avatar']
+    })
+  }
+  return arr
+}
+
+function changeAvatar(target, img) {
+  if (img) {
+    $('head').append(`
+      <style>
+        .floating-chat .chat .messages li.from-${target}:before {
+          background-image: url(${img});
+        }
+      </style>`
+    );
+    
+  }
+}
+
 function init() {
   socket = io.connect(serverUrl);
 
@@ -552,9 +595,8 @@ function init() {
     moveToBottom()
   })
 
-  loadUI();
-  loadContacts($('.contacts > ul'), originUsername);
-  loadConversation($('.messages'), originUsername, chatWithData);
+  loadUI()
+  loadContacts($('.contacts > ul'), originUsername)
   element = $('.floating-chat');
   var myStorage = localStorage;
 

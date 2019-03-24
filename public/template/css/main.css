@@ -2298,7 +2298,7 @@ nav a:hover {
 
 .carousel-area {
   position: relative;
-  background: url(../img/carousel-bg.jpg) no-repeat center center/cover;
+  /*background: url(../img/carousel-bg.jpg) no-repeat center center/cover;*/
 }
 
 .carousel-area .overlay-bg {
