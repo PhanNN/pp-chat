@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
-const port = process.env.SERVER_PORT || 3000
+const port = process.env.PORT || 3000
 server = app.listen(port, () => {
     console.log("App is running on port " + port)
 });
