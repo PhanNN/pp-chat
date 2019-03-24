@@ -171,7 +171,7 @@ const chatUICss = `
     height: 0;
     border-top: 10px solid rgba(25, 147, 147, 0.2);
   }
-  .floating-chat .chat .messages li.other {
+  .floating-chat .chat .messages li.self {
     animation: show-chat-odd 0.15s 1 ease-in;
     -moz-animation: show-chat-odd 0.15s 1 ease-in;
     -webkit-animation: show-chat-odd 0.15s 1 ease-in;
@@ -179,15 +179,15 @@ const chatUICss = `
     margin-right: 45px;
     color: #0ad5c1;
   }
-  .floating-chat .chat .messages li.other:before {
+  .floating-chat .chat .messages li.self:before {
     right: -45px;
     background-image: url(https://github.com/Thatkookooguy.png);
   }
-  .floating-chat .chat .messages li.other:after {
+  .floating-chat .chat .messages li.self:after {
     border-right: 10px solid transparent;
     right: -10px;
   }
-  .floating-chat .chat .messages li.self {
+  .floating-chat .chat .messages li.other {
     animation: show-chat-even 0.15s 1 ease-in;
     -moz-animation: show-chat-even 0.15s 1 ease-in;
     -webkit-animation: show-chat-even 0.15s 1 ease-in;
@@ -195,11 +195,11 @@ const chatUICss = `
     margin-left: 45px;
     color: #0ec879;
   }
-  .floating-chat .chat .messages li.self:before {
+  .floating-chat .chat .messages li.other:before {
     left: -45px;
     background-image: url(https://github.com/ortichon.png);
   }
-  .floating-chat .chat .messages li.self:after {
+  .floating-chat .chat .messages li.other:after {
     border-left: 10px solid transparent;
     left: -10px;
   }
@@ -357,6 +357,14 @@ const chatUICss = `
     color: #DA003A;
     display: inline-block;
     float: right;
+  }
+
+  #attach-file {
+    display: none;
+  }
+
+  .full-ui.enter #attach-file {
+    display: inline-block;
   }
 </style>
 `;
