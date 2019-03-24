@@ -391,7 +391,7 @@ const chatUI = `
   </div>
 </div>`;
 
-const serverUrl = 'http://172.16.0.7:3000'
+const serverUrl = window.location.origin
 let socket, 
   message, 
   chatWithData, 
