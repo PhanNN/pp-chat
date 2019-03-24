@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const {ExpressPeerServer} = require('peer')
+const sslRedirect = require('heroku-ssl-redirect')
 const {io} = require('./socket')
 
 const configDB = require('./config/database.js')
@@ -11,6 +12,8 @@ mongoose.connect(configDB.url)
 
 app.set('view engine', 'ejs')
 
+// enable ssl redirect
+app.use(sslRedirect())
 app.use(express.static('public'))
 app.use('/attachments', express.static('attachments'))
 

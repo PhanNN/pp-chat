@@ -31,6 +31,7 @@
     "dotenv": "^6.2.0",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
+    "heroku-ssl-redirect": "^0.0.4",
     "mongoose": "^5.4.9",
     "mongoose-findorcreate": "^3.0.0",
     "mongoose-paginate": "^5.0.3",
