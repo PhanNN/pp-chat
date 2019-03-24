@@ -313,6 +313,14 @@ const chatUICss = `
   }
 
   .floating-chat .contact img {
+    border: 2px grey solid;
+  }
+
+  .floating-chat .contact.online img {
+    border: 2px green solid;
+  }
+
+  .floating-chat .contact img {
     width: 25px;
     height: 25px;
     border-radius: 50%;
@@ -616,9 +624,25 @@ function changeAvatar(target, img) {
   }
 }
 
+function setActive(receiver) {
+  $(`.contact-${receiver}`).addClass('online')
+}
+
+function removeActive(receiver) {
+  $(`.contact-${receiver}`).removeClass('online')
+}
+
 function moveToFirst(receiver, hasNewMsg) {
-  $(`.contacts > ul .contact-${receiver}`).remove()
-  $('.contacts > ul').prepend(getContactLI(receiver, allContacts[receiver], hasNewMsg ? 'new-msg' : '', newMsgCount[receiver]))
+  const receiverBlock = $(`.contacts > ul .contact-${receiver}`)
+  const classList = receiverBlock.attr('class')
+  receiverBlock.remove()
+  $('.contacts > ul').prepend(
+    getContactLI(receiver, 
+      allContacts[receiver], 
+      hasNewMsg ? `new-msg ${classList}` : `${classList}`, 
+      newMsgCount[receiver]
+    )
+  )
 }
 
 function initSocket() {
@@ -657,12 +681,12 @@ function initSocket() {
   })
 
   socket.on('online', (data) => {
-    console.log(data)
+    setActive(data)
     // changeStatus(contact, data, true)
   })
 
   socket.on('offline', (data) => {
-    console.log(data)
+    removeActive(data)
     // changeStatus(contact, data, false)
   })
 }
