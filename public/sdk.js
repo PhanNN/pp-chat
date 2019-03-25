@@ -1,4 +1,4 @@
-const chatUICss = `
+const chatUIPre = `
 <style type="text/css">
   @import 'https://fonts.googleapis.com/css?family=Noto+Sans';
   * {
@@ -272,7 +272,6 @@ const chatUICss = `
     background-position: center;
   }
   .write-link.file {
-    position: absolute;
     bottom: 0;
     left: 0;
     width: 20px;
@@ -297,7 +296,7 @@ const chatUI = `<div class="floating-chat">
       <div class="footer">
         <a href="javascript:;" class="write-link attach"></a>
         <input class="write-link file" type="file" name="attachFile" id="attach-file" />
-        <div class="text-box" contenteditable="true" disabled="true"></div>
+        <div class="text-box" contenteditable="true" disabled="true" data-emojiable="true"></div>
         <a href="javascript:;" class="write-link smiley"></a>
         <button id="sendMessage">send</button>
       </div>
@@ -418,7 +417,7 @@ function loadUI() {
   const body = document.getElementsByTagName("BODY")[0];
   body.innerHTML += chatUI;
   const head = document.getElementsByTagName("HEAD")[0];
-  head.innerHTML += chatUICss;
+  head.innerHTML += chatUIPre;
 }
 
 function uploadFile(e, socket, to) {
