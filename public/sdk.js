@@ -366,11 +366,30 @@ const chatUICss = `
   .full-ui.enter #attach-file {
     display: inline-block;
   }
+
+  .full-ui.enter .typing {
+    padding-left: 10px;
+  }
+
+  .floating-chat .has-new-message {
+    font-size: 15px;
+    position: absolute;
+    display: none !important;
+    top: 0px;
+    right: 0px;
+    color: green;
+  }
+
+  .floating-chat .has-new-message.active {
+    display: block;
+  }
+
 </style>
 `;
 
 const chatUI = `
 <div class="floating-chat">
+  <i class="fa fa-circle has-new-message" aria-hidden="true"></i>
   <i class="fa fa-comments" aria-hidden="true"></i>
   <div class="full-ui">
     <div class="contacts">
@@ -388,6 +407,8 @@ const chatUI = `
       </div>
       <ul class="messages">
       </ul>
+      <div class="typing">
+      </div>
       <div class="footer">
         <a href="javascript:;" class="write-link attach"></a>
         <input class="write-link file" type="file" name="attachFile" id="attach-file" />
@@ -409,17 +430,22 @@ let socket,
   newMsgCount = [];
 
 function openElement() {
-    var messages = element.find('.messages');
-    var textInput = element.find('.text-box');
-    element.find('>i').hide();
-    element.addClass('expand');
-    element.find('.full-ui').addClass('enter');
-    var strLength = textInput.val().length * 2;
-    textInput.keydown(onMetaAndEnter).prop("disabled", false).focus();
-    element.off('click', openElement);
-    element.find('.header button').click(closeElement);
-    element.find('#sendMessage').click(sendNewMessage);
-    messages.scrollTop(messages.prop("scrollHeight"));
+
+    $('.has-new-message').removeClass('active')
+
+    var messages = element.find('.messages')
+    var textInput = element.find('.text-box')
+    element.find('>i').hide()
+    element.addClass('expand')
+    element.find('.full-ui').addClass('enter')
+    var strLength = textInput.val().length * 2
+    textInput.keydown(onMetaAndEnter).prop("disabled", false).focus()
+    element.off('click', openElement)
+    element.find('.header button').click(closeElement)
+    element.find('#sendMessage').click(sendNewMessage)
+    messages.scrollTop(messages.prop("scrollHeight"))
+
+
 }
 
 function closeElement() {
@@ -575,10 +601,15 @@ function loadUI() {
 function uploadFile(e, socket, to) {
   let file = e.target.files[0];
   if (!file) {
-    return;
+    return
+  }
+  if (file.size > 1000000) {
+    alert('File should be smaller than 1MB')
+    return
   }
   let data = new FormData()
   data.append('files', file)
+  e.target.value = ''
   $.ajax({
     url: serverUrl + `/upload`,
     type: 'POST',
@@ -665,6 +696,11 @@ function initSocket() {
   })
 
   socket.on('new_message', (data) => {
+
+    if (!element.hasClass('expand')) {
+      $('.has-new-message').addClass('active')
+    }
+
     const chatroom = $('.messages')
     const receiver = data.username
     if (originUsername !== receiver && chatWithData !== receiver) {
@@ -678,7 +714,7 @@ function initSocket() {
       moveToFirst(receiver, 'new-msg')
       return
     }
-    // feedback.html('')
+    $('.typing').html('')
     const chatClass = originUsername === receiver ? `self from-${originUsername}` : `other from-${chatWithData}`
     if ('attachment' === data.type) {
       chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.path}" download="${data.message}">${data.message}</a></li>`)
@@ -689,8 +725,13 @@ function initSocket() {
   })
 
   socket.on('typing', (data) => {
-    console.log(data)
-    // feedback.html(`<p><i>${data.username} is typing ...</i></p>`)
+    if (data.username === chatWithData)
+      $('.typing').html(`<p><i>${data.username} is typing ...</i></p>`)
+  })
+
+  socket.on('untyping', (data) => {
+    if (data.username === chatWithData)
+      $('.typing').html('')
   })
 
   socket.on('online', (data) => {
@@ -727,6 +768,11 @@ function init() {
 
   element.click(openElement);
   $('#attach-file').change((e) => uploadFile(e, socket, chatWithData))
+  $('.text-box').on('keyup', (e) => {
+    socket.emit(e.target.innerText == '' ? 'untyping' :'typing', {
+      to: chatWithData
+    })
+  })
 }
 
 

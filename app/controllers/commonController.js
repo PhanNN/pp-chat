@@ -73,14 +73,13 @@ function saveAttachment(file, res, path) {
     mimeType: file.mimetype
   }).save(function(err, item) {
     if (err)
-    res.json({success: false, data: err})
+      res.json({success: false, data: err})
 
     res.json({success: true, data: item})
   })
 }
 
 exports.getHash = (text) => {
-  console.log(text)
   return crypto.createHmac('sha256', process.env.CRYPTO_SECRET)
     .update(text)
     .digest('hex')
