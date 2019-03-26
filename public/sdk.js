@@ -479,6 +479,9 @@ function moveToBottom() {
 }
 
 function getContactLI(name, avatar, additionalCls, msgCount) {
+  if (msgCount == 9) {
+    msgCount = '9+'
+  }
   return `
   <li class="contact contact-${name} ${additionalCls}">
     <a onclick="return changePartner('${name}');" href="javascript:;" class="contact-name">
@@ -667,6 +670,8 @@ function initSocket() {
     if (originUsername !== receiver && chatWithData !== receiver) {
       if (typeof newMsgCount[receiver] == 'undefined') {
         newMsgCount[receiver] = 1
+      } else if (newMsgCount[receiver] == 9) {
+        // don't increase
       } else {
         newMsgCount[receiver]++
       }
