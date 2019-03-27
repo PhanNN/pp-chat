@@ -24,6 +24,12 @@ exports.io = (server) => {
         username: socket.username
       })
     })
+
+    socket.on('untyping', (data) => {
+      io.to(getHash(data.to)).emit('untyping', {
+        username: socket.username
+      })
+    })
   })
 }
 
