@@ -12,7 +12,14 @@ const messageSchema = mongoose.Schema({
   text: String,
   createdAt: Date,
   from: String,
-  attachment: { type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }
+  attachment: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Attachment' 
+  },
+  read: { 
+    type: Date,
+    default: Date.now()
+  }
 })
 
 messageSchema.plugin(mongoosePaginate);

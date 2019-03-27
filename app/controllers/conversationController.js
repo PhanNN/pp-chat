@@ -10,7 +10,8 @@ exports.saveMsg = (from, to, msg, attachment) => {
       text: msg,
       from: from,
       attachment: attachment,
-      createdAt: Date()
+      createdAt: Date(),
+      read: null
     }, function(err, val) {
       if (err) {
         console.err(err)
