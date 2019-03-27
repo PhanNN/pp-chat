@@ -427,7 +427,8 @@ let socket,
   element,
   originUsername = 'Demo',
   allContacts,
-  newMsgCount = [];
+  newMsgCount = [],
+  curPage = 0;
 
 function openElement() {
 
@@ -497,10 +498,10 @@ function onMetaAndEnter(event) {
     }
 }
 
-function moveToBottom() {
+function moveToBottom(height) {
   const messagesContainer = $('.messages');
   messagesContainer.finish().animate({
-    scrollTop: messagesContainer.prop("scrollHeight")
+    scrollTop: height == -1 ? messagesContainer.prop("scrollHeight") : height
   }, 250);
 }
 
@@ -535,7 +536,7 @@ function loadContacts(contactDiv, source) {
         contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
         chatWithData = contacts[0].name
         if (chatWithData) {
-          loadConversation($('.messages'), originUsername, chatWithData, 0)
+          loadConversation($('.messages'), originUsername, chatWithData, false)
           changeAvatar(chatWithData, allContacts[chatWithData])
         }
         res.data.docs.forEach(function(item) {
@@ -549,28 +550,45 @@ function loadContacts(contactDiv, source) {
   })
 }
 
-function loadConversation(chatroom, source, target, page) {
+function loadConversation(chatroom, source, target, getNext) {
+
   chatWithData = target
   if (chatroom) {
-    chatroom.empty()
+    if (!getNext) {
+      chatroom.empty()
+    }
   } else {
     return
   }
+
   $.ajax({
-    url: serverUrl + `/conversation?user=${source}&target=${target}&page=${page}`,
+    url: serverUrl + `/conversation?user=${source}&target=${target}&page=${curPage}`,
     type: 'GET',
     success: function(res) {
       if (res.data) {
-        console.log(res.data)
+        if (res.data.messages.length > 0) {
+          curPage++
+        }
+        if (getNext) {
+          res.data.messages = res.data.messages.reverse()
+        }
         res.data.messages.forEach(function(data) {
           const chatClass = source === data.from ? `self from-${source}` : `other from-${target}`
-          if ('attachment' === data.type) {
-            chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
+          if (getNext) {
+            if ('attachment' === data.type) {
+              chatroom.prepend(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
+            } else {
+              chatroom.prepend(`<li class="${chatClass}">${data.text}</li>`)
+            }
           } else {
-            chatroom.append(`<li class="${chatClass}">${data.text}</li>`)
+            if ('attachment' === data.type) {
+              chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.attachment.path}" download="${data.text}">${data.text}</a></li>`)
+            } else {
+              chatroom.append(`<li class="${chatClass}">${data.text}</li>`)
+            }
           }
         })
-        moveToBottom()
+        moveToBottom(getNext ? res.data.messages.length * 60 : -1)
       }
     },
     error: function(err) {
@@ -633,13 +651,14 @@ function uploadFile(e, socket, to) {
 }
 
 function changePartner(partner) {
+  curPage = 0
   if (chatWithData !== partner) {
     // reset new-msg count
     newMsgCount[partner] = 0
 
     // remove new-msg class
     $(`.contact-${partner}`).removeClass('new-msg')
-    loadConversation($('.messages'), originUsername, partner, 0)
+    loadConversation($('.messages'), originUsername, partner, false)
     changeAvatar(partner, allContacts[partner])
   }
 }
@@ -773,6 +792,12 @@ function init() {
     socket.emit(e.target.innerText == '' ? 'untyping' :'typing', {
       to: chatWithData
     })
+  })
+
+  $('.messages').scroll(function() {
+    if ($('.messages').scrollTop() == 0) {
+      loadConversation($('.messages'), originUsername, chatWithData, true)
+    }
   })
 }
 
