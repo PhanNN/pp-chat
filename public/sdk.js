@@ -509,7 +509,7 @@ function loadContacts(contactDiv, source) {
         contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
         chatWithData = contacts[0].name
         if (chatWithData) {
-          loadConversation($('.messages'), originUsername, chatWithData)
+          loadConversation($('.messages'), originUsername, chatWithData, 0)
           changeAvatar(chatWithData, allContacts[chatWithData])
         }
         res.data.docs.forEach(function(item) {
@@ -523,7 +523,7 @@ function loadContacts(contactDiv, source) {
   })
 }
 
-function loadConversation(chatroom, source, target) {
+function loadConversation(chatroom, source, target, page) {
   chatWithData = target
   if (chatroom) {
     chatroom.empty()
@@ -531,10 +531,11 @@ function loadConversation(chatroom, source, target) {
     return
   }
   $.ajax({
-    url: serverUrl + `/conversation?user=${source}&target=${target}`,
+    url: serverUrl + `/conversation?user=${source}&target=${target}&page=${page}`,
     type: 'GET',
     success: function(res) {
       if (res.data) {
+        console.log(res.data)
         res.data.messages.forEach(function(data) {
           const chatClass = source === data.from ? `self from-${source}` : `other from-${target}`
           if ('attachment' === data.type) {
@@ -607,7 +608,7 @@ function changePartner(partner) {
 
     // remove new-msg class
     $(`.contact-${partner}`).removeClass('new-msg')
-    loadConversation($('.messages'), originUsername, partner)
+    loadConversation($('.messages'), originUsername, partner, 0)
     changeAvatar(partner, allContacts[partner])
   }
 }
