@@ -526,20 +526,21 @@ function getContactLI(name, avatar, additionalCls, msgCount) {
 
 function loadContacts(contactDiv, source) {
   $.ajax({
-    url: serverUrl + '/contacts',
+    url: serverUrl + `/contacts?user=${source}`,
     type: 'GET',
     success: function(res) {
       let contacts = res.data.docs
+      let curUser = res.data.user
+      console.log(curUser)
       if (contacts) {
         allContacts = convertToMap(contacts)
-        changeAvatar(originUsername, allContacts[originUsername])
-        contacts.splice(contacts.map(item => item.name).indexOf(originUsername), 1);
+        changeAvatar(originUsername, curUser['avatar'])
         chatWithData = contacts[0].name
         if (chatWithData) {
           loadConversation($('.messages'), originUsername, chatWithData, false)
           changeAvatar(chatWithData, allContacts[chatWithData])
         }
-        res.data.docs.forEach(function(item) {
+        contacts.forEach(function(item) {
           contactDiv.append(getContactLI(item.name, item.avatar, '', 0))
         })
       }
@@ -741,7 +742,7 @@ function initSocket() {
     } else {
       chatroom.append(`<li class="${chatClass}">${data.message}</li>`)
     }
-    moveToBottom()
+    moveToBottom(-1)
   })
 
   socket.on('typing', (data) => {

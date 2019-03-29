@@ -48,6 +48,18 @@ exports.fetchConversations = (req, res, user) => {
   })
 }
 
+exports.fetchConversationsWithNewMsg = async (user) => {
+  await Conversation.find({
+    to: {
+      $eq: user
+    }
+  })
+  .then(function(result) {
+    console.log(result)
+    return result
+  })
+} 
+
 exports.fetchConversation = (req, res, user, target, page) => {
   Conversation.findOne({
     owner: {
