@@ -1,4 +1,5 @@
 const {Conversation, Msg} = require("../models/conversation")
+const _ = require('lodash');
 
 exports.saveMsg = (from, to, msg, attachment) => {
   Conversation.findOrCreate({
@@ -49,14 +50,23 @@ exports.fetchConversations = (req, res, user) => {
 }
 
 exports.fetchConversationsWithNewMsg = async (user) => {
-  await Conversation.find({
+  return await Conversation.find({
     to: {
       $eq: user
     }
   })
-  .then(function(result) {
-    console.log(result)
-    return result
+  .populate({
+    path: 'messages',
+    options: {
+      sort: { createdAt: -1 }
+    },
+    match: { read: { $eq: null }},
+    select: 'read _id',
+  })
+  .then(function(results) {
+    return _.forEach(results, (res) => {
+      res.unreadMsg = res.messages.length
+    })
   })
 } 
 

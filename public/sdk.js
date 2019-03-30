@@ -381,7 +381,7 @@ const chatUICss = `
   }
 
   .floating-chat .has-new-message.active {
-    display: block;
+    display: block !important;
   }
 
 </style>
@@ -483,6 +483,7 @@ function sendNewMessage() {
 
     if (!newMessage) return;
 
+    resetMsgCount(chatWithData)
     moveToFirst(chatWithData, '')
     sendMsg(socket, chatWithData, newMessage);
 
@@ -506,7 +507,7 @@ function moveToBottom(height) {
 }
 
 function getContactLI(name, avatar, additionalCls, msgCount) {
-  if (msgCount == 9) {
+  if (msgCount >= 9) {
     msgCount = '9+'
   }
   return `
@@ -531,7 +532,6 @@ function loadContacts(contactDiv, source) {
     success: function(res) {
       let contacts = res.data.docs
       let curUser = res.data.user
-      console.log(curUser)
       if (contacts) {
         allContacts = convertToMap(contacts)
         changeAvatar(originUsername, curUser['avatar'])
@@ -541,7 +541,12 @@ function loadContacts(contactDiv, source) {
           changeAvatar(chatWithData, allContacts[chatWithData])
         }
         contacts.forEach(function(item) {
-          contactDiv.append(getContactLI(item.name, item.avatar, '', 0))
+          newMsgCount[item.name] = item.unreadMsg
+          const hasNewMsg = newMsgCount[item.name] > 0
+          contactDiv.append(getContactLI(item.name, item.avatar, hasNewMsg ? 'new-msg' : '', newMsgCount[item.name]))
+          if (hasNewMsg) {
+            setNewMsgIcon()
+          }
         })
       }
     },
@@ -651,14 +656,18 @@ function uploadFile(e, socket, to) {
   })
 }
 
+function resetMsgCount(partner) {
+  // reset new-msg count
+  newMsgCount[partner] = 0
+
+  // remove new-msg class
+  $(`.contact-${partner}`).removeClass('new-msg')
+}
+
 function changePartner(partner) {
   curPage = 0
   if (chatWithData !== partner) {
-    // reset new-msg count
-    newMsgCount[partner] = 0
-
-    // remove new-msg class
-    $(`.contact-${partner}`).removeClass('new-msg')
+    resetMsgCount(partner)
     loadConversation($('.messages'), originUsername, partner, false)
     changeAvatar(partner, allContacts[partner])
   }
@@ -708,6 +717,12 @@ function moveToFirst(receiver, hasNewMsg) {
   )
 }
 
+function setNewMsgIcon() {
+  if (!element.hasClass('expand')) {
+    $('.has-new-message').addClass('active')
+  }
+}
+
 function initSocket() {
   setSrc()
   socket = io.connect(serverUrl)
@@ -718,9 +733,7 @@ function initSocket() {
 
   socket.on('new_message', (data) => {
 
-    if (!element.hasClass('expand')) {
-      $('.has-new-message').addClass('active')
-    }
+    setNewMsgIcon()
 
     const chatroom = $('.messages')
     const receiver = data.username

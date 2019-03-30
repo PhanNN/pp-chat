@@ -12,13 +12,13 @@ const messageSchema = mongoose.Schema({
   text: String,
   createdAt: Date,
   from: String,
-  attachment: { 
+  attachment: {
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Attachment' 
   },
   read: { 
     type: Date,
-    default: Date.now()
+    default: new Date()
   }
 })
 
