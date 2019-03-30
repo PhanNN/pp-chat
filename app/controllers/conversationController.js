@@ -60,15 +60,48 @@ exports.fetchConversationsWithNewMsg = async (user) => {
     options: {
       sort: { createdAt: -1 }
     },
-    match: { read: { $eq: null }},
+    match: { 
+      read: { $eq: null },
+      from: { $ne: user  }
+    },
     select: 'read _id',
   })
   .then(function(results) {
     return _.forEach(results, (res) => {
+      console.log(res.messages)
       res.unreadMsg = res.messages.length
     })
   })
-} 
+}
+
+exports.readMsgs = (user, target) => {
+  Conversation.findOne({
+    owner: {
+      $eq: user
+    },
+    to: {
+      $eq: target
+    }
+  })
+  .populate({
+    path: 'messages',
+    match: { read: { $eq: null }},
+    select: '_id',
+  })
+  .then(function(res) {
+    if (res) {
+      Msg.updateMany({
+        _id: {
+          $in: _.map(res.messages, '_id')
+        }
+      }, { $set: { read: new Date() } })
+      .then(result => {
+        console.log(result)
+      })
+    }
+    
+  })
+}
 
 exports.fetchConversation = (req, res, user, target, page) => {
   Conversation.findOne({

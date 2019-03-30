@@ -1,5 +1,5 @@
 const conversationCtrl = require('./app/controllers/conversationController')
-const {getHash} = require('./app/controllers/commonController')
+const { getHash } = require('./app/controllers/commonController')
 
 exports.io = (server) => {
   const io = require('socket.io')(server)
@@ -17,6 +17,10 @@ exports.io = (server) => {
       await conversationCtrl.saveMsg(socket.username, data.to, data.message, data.attachment)
       sendMsg(io, socket.username, data.to, data)
       sendMsg(io, socket.username, socket.username, data)
+    })
+
+    socket.on('read_message', async (data) => {
+      conversationCtrl.readMsgs(socket.username, data.to)
     })
 
     socket.on('typing', (data) => {

@@ -539,6 +539,7 @@ function loadContacts(contactDiv, source) {
         if (chatWithData) {
           loadConversation($('.messages'), originUsername, chatWithData, false)
           changeAvatar(chatWithData, allContacts[chatWithData])
+          readAllMsgs(chatWithData)
         }
         contacts.forEach(function(item) {
           newMsgCount[item.name] = item.unreadMsg
@@ -568,13 +569,14 @@ function loadConversation(chatroom, source, target, getNext) {
   }
 
   $.ajax({
-    url: serverUrl + `/conversation?user=${source}&target=${target}&page=${curPage}`,
+    url: serverUrl + `/conversation?user=${source}&target=${target}&page=${curPage++}`,
     type: 'GET',
     success: function(res) {
       if (res.data) {
-        if (res.data.messages.length > 0) {
-          curPage++
+        if (res.data.messages.length == 0) {
+          return
         }
+
         if (getNext) {
           res.data.messages = res.data.messages.reverse()
         }
@@ -664,12 +666,19 @@ function resetMsgCount(partner) {
   $(`.contact-${partner}`).removeClass('new-msg')
 }
 
+function readAllMsgs(to) {
+  socket.emit('read_message', {
+    to: to
+  })
+}
+
 function changePartner(partner) {
   curPage = 0
   if (chatWithData !== partner) {
     resetMsgCount(partner)
     loadConversation($('.messages'), originUsername, partner, false)
     changeAvatar(partner, allContacts[partner])
+    readAllMsgs(partner)
   }
 }
 
