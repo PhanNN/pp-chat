@@ -68,7 +68,7 @@ exports.fetchConversationsWithNewMsg = async (user) => {
   })
   .then(function(results) {
     return _.forEach(results, (res) => {
-      console.log(res.messages)
+      // console.log(res.messages)
       res.unreadMsg = res.messages.length
     })
   })
@@ -95,9 +95,9 @@ exports.readMsgs = (user, target) => {
           $in: _.map(res.messages, '_id')
         }
       }, { $set: { read: new Date() } })
-      .then(result => {
-        console.log(result)
-      })
+      // .then(result => {
+      //   console.log(result)
+      // })
     }
     
   })
