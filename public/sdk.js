@@ -377,7 +377,7 @@ const chatUICss = `
     display: none !important;
     top: 0px;
     right: 0px;
-    color: green;
+    color: #FF0000;
   }
 
   .floating-chat .has-new-message.active {
@@ -757,8 +757,11 @@ function initSocket() {
       moveToFirst(receiver, 'new-msg')
       return
     }
-    $('.typing').html('')
-    const chatClass = originUsername === receiver ? `self from-${originUsername}` : `other from-${chatWithData}`
+    const mine = originUsername === receiver
+    if (!mine) {
+      $('.typing').html('')
+    }
+    const chatClass = mine ? `self from-${originUsername}` : `other from-${chatWithData}`
     if ('attachment' === data.type) {
       chatroom.append(`<li class="${chatClass}"> <a target='_blank' href="${data.path}" download="${data.message}">${data.message}</a></li>`)
     } else {
