@@ -95,9 +95,9 @@ exports.readMsgs = (user, target) => {
           $in: _.map(res.messages, '_id')
         }
       }, { $set: { read: new Date() } })
-      // .then(result => {
-      //   console.log(result)
-      // })
+      .then(result => {
+        console.log(result)
+      })
     }
     
   })

@@ -825,6 +825,10 @@ function init() {
       loadConversation($('.messages'), originUsername, chatWithData, true)
     }
   })
+
+  $(".messages, .footer").click(function() {
+    resetMsgCount(chatWithData)
+  })
 }
 
 
