@@ -18,7 +18,7 @@ const innerCss = `
 
 .collapsible:after {
   content: "\\002B";
-  color: white;
+  color: blue;
   font-weight: bold;
   float: right;
   margin-left: 5px;
@@ -69,7 +69,7 @@ function enableCollapse() {
         this.classList.toggle("active");
         var content = this.nextElementSibling;
         if (content.style.maxHeight){
-          content.style.maxHeight = null;
+          content.style.maxHeight = 0;
         } else {
           content.style.maxHeight = content.scrollHeight + "px";
         } 
@@ -78,7 +78,7 @@ function enableCollapse() {
 }
 
 function addIframe() {
-    const head = document.getElementsByTagName("HEAD")[0]
+    const head = $('.details-product-purchase').context.all[1]
     head.innerHTML += innerCss
     $('.details-product-purchase').append(innertHtml)
     enableCollapse()
