@@ -17,7 +17,7 @@ const innerCss = `
 }
 
 .collapsible:after {
-  content: '\002B';
+  content: "\002B";
   color: white;
   font-weight: bold;
   float: right;
