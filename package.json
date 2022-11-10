@@ -29,7 +29,7 @@
     "aws-sdk": "^2.814.0",
     "crypto": "^1.0.1",
     "dotenv": "^6.2.0",
-    "ejs": "^2.6.1",
+    "ejs": "^3.1.7",
     "express": "^4.16.4",
     "heroku-ssl-redirect": "^0.0.4",
     "lodash": "^4.17.19",
